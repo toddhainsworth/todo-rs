@@ -1,6 +1,7 @@
 extern crate serde;
 extern crate serde_json;
 extern crate dirs;
+extern crate colored;
 
 #[macro_use]
 extern crate serde_derive;
@@ -9,6 +10,7 @@ use std::path::Path;
 use std::fs;
 use std::io::Result;
 use std::process;
+use colored::*;
 
 const TODO_FILENAME: &'static str = ".todos";
 
@@ -42,7 +44,13 @@ fn main() {
     let items: Vec<TodoItem> = serde_json::from_str(&f).unwrap();
 
     for (i, item) in items.into_iter().enumerate() {
-        println!("{} - {}", i, item.text);
+        let text = if item.completed {
+            item.text.green()
+        } else {
+            item.text.yellow()
+        };
+
+        println!("{} - {}", i, text);
     }
 }
 
