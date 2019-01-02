@@ -8,6 +8,7 @@ extern crate serde_derive;
 
 use std::path::Path;
 use std::fs;
+use std::env;
 use std::io::Result;
 use std::process;
 use colored::*;
@@ -41,7 +42,51 @@ fn main() {
         }
     };
 
-    let items: Vec<TodoItem> = serde_json::from_str(&f).unwrap();
+    let mut items: Vec<TodoItem> = serde_json::from_str(&f).unwrap();
+    let args: Vec<String> = env::args().collect();
+
+    // Delete items
+    if args.len() >= 3 && args[1] == "-d" {
+        let item_ids = &args[2..];
+
+        for item_id in item_ids {
+            match item_id.parse::<usize>() {
+                Ok(id) => items.remove(id),
+                Err(e) => {
+                    eprintln!("Could not mark item as complete: {}", e);
+                    process::exit(1);
+                }
+            };
+        }
+    }
+
+    // Toggle completion of items
+    if args.len() >= 3 && args[1] == "-c" {
+        let item_ids = &args[2..];
+
+        for item_id in item_ids {
+            match item_id.parse::<usize>() {
+                Ok(id) => {
+                    match items.get_mut(id) {
+                        Some(item) => item.completed = !item.completed,
+                        None => ()
+                    };
+                },
+                Err(e) => {
+                    eprintln!("Could not mark item as complete: {}", e);
+                    process::exit(1);
+                }
+            };
+        }
+    }
+
+    match update_todo_file(&items) {
+        Err(e) => {
+            eprintln!("Failed to update todo file: {}", e);
+            process::exit(1);
+        },
+        _ => ()
+    }
 
     for (i, item) in items.into_iter().enumerate() {
         let text = if item.completed {
@@ -55,9 +100,16 @@ fn main() {
 }
 
 fn get_todo_file() -> Result<String> {
+    fs::read_to_string(get_todo_file_path())
+}
+
+fn get_todo_file_path() -> String {
     let home = dirs::home_dir().unwrap();
-    let path = format!(
-        "{}/{}", home.display(), Path::new(TODO_FILENAME).display()
-    );
-    fs::read_to_string(path)
+    format!("{}/{}", home.display(), Path::new(TODO_FILENAME).display())
+}
+
+fn update_todo_file(items: &Vec<TodoItem>) -> Result<()> {
+    let path = get_todo_file_path();
+    let buf = serde_json::to_string(&items).unwrap();
+    fs::write(path, buf)
 }
