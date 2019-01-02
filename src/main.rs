@@ -47,39 +47,35 @@ fn main() {
 
     // Delete items
     if args.len() >= 3 && args[1] == "-d" {
-        let item_ids = &args[2..];
+        let item_id = &args[2];
 
-        for item_id in item_ids {
-            match item_id.parse::<usize>() {
-                Ok(id) => items.remove(id),
-                Err(e) => {
-                    eprintln!("Could not mark item as complete: {}", e);
-                    process::exit(1);
-                }
-            };
-        }
+        match item_id.parse::<usize>() {
+            Ok(id) => items.remove(id),
+            Err(e) => {
+                eprintln!("Could not mark item as complete: {}", e);
+                process::exit(1);
+            }
+        };
     }
 
     // Toggle completion of items
-    if args.len() >= 3 && args[1] == "-c" {
-        let item_ids = &args[2..];
-
-        for item_id in item_ids {
-            match item_id.parse::<usize>() {
-                Ok(id) => {
-                    match items.get_mut(id) {
-                        Some(item) => item.completed = !item.completed,
-                        None => ()
-                    };
-                },
-                Err(e) => {
-                    eprintln!("Could not mark item as complete: {}", e);
-                    process::exit(1);
-                }
-            };
-        }
+    if args.len() == 3 && args[1] == "-c" {
+        let item_id = &args[2];
+        match item_id.parse::<usize>() {
+            Ok(id) => {
+                match items.get_mut(id) {
+                    Some(item) => item.completed = !item.completed,
+                    None => ()
+                };
+            },
+            Err(e) => {
+                eprintln!("Could not mark item as complete: {}", e);
+                process::exit(1);
+            }
+        };
     }
 
+    // Clear all or add a new one
     if args.len() == 2 {
         let text = &args[1];
         items.push(TodoItem::new(text, false))
