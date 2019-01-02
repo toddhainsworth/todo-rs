@@ -80,6 +80,11 @@ fn main() {
         }
     }
 
+    if args.len() == 2 {
+        let text = &args[1];
+        items.push(TodoItem::new(text, false))
+    }
+
     match update_todo_file(&items) {
         Err(e) => {
             eprintln!("Failed to update todo file: {}", e);
