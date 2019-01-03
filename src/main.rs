@@ -18,18 +18,19 @@ const TODO_FILENAME: &'static str = ".todos";
 #[derive(Serialize, Deserialize, Debug)]
 struct TodoItem {
     text: String,
-    completed: bool
+    completed: bool,
+    priority: usize
 }
 
 impl TodoItem {
-    fn new(text: &str, completed: bool) -> Self {
-        TodoItem { text: String::from(text), completed }
+    fn new(text: &str, completed: bool, priority: usize) -> Self {
+        TodoItem { text: String::from(text), completed, priority }
     }
 }
 
 impl Default for TodoItem {
     fn default() -> Self {
-        TodoItem::new("", false)
+        TodoItem::new("", false, 1)
     }
 }
 
@@ -42,24 +43,31 @@ fn main() {
         }
     };
 
-    let mut items: Vec<TodoItem> = serde_json::from_str(&f).unwrap();
+    let mut items: Vec<TodoItem> = match serde_json::from_str(&f) {
+        Ok(items) => items,
+        Err(_) => Vec::new()
+    };
     let args: Vec<String> = env::args().collect();
 
     // Delete items
     if args.len() >= 3 && args[1] == "-d" {
         let item_id = &args[2];
-
-        match item_id.parse::<usize>() {
-            Ok(id) => items.remove(id),
+        let item_id = match item_id.parse::<usize>() {
+            Ok(id) => id,
             Err(e) => {
                 eprintln!("Could not mark item as complete: {}", e);
                 process::exit(1);
             }
         };
-    }
 
+        if item_id >= items.len() {
+            eprintln!("Could not find item with id: {}", item_id);
+            process::exit(1);
+        }
+
+        items.remove(item_id);
     // Toggle completion of items
-    if args.len() == 3 && args[1] == "-c" {
+    } else if args.len() == 3 && args[1] == "-c" {
         let item_id = &args[2];
         match item_id.parse::<usize>() {
             Ok(id) => {
@@ -73,12 +81,20 @@ fn main() {
                 process::exit(1);
             }
         };
-    }
-
-    // Clear all or add a new one
-    if args.len() == 2 {
+    // Add a new item
+    } else if args.len() == 3 {
         let text = &args[1];
-        items.push(TodoItem::new(text, false))
+        let priority = &args[2];
+        let priority = match priority.parse::<usize>() {
+            Ok(priority) => priority,
+            Err(e) => {
+                eprintln!("Priority must be a number (1, 2 or 3): {}", e);
+                process::exit(1);
+            }
+        };
+        items.push(TodoItem::new(text, false, priority));
+    } else {
+        // todo: print usage
     }
 
     match update_todo_file(&items) {
@@ -88,6 +104,9 @@ fn main() {
         },
         _ => ()
     }
+
+    // Sort items by priority 1 = highest, Infinity = lowest
+    items.sort_by(|a, b| a.priority.cmp(&b.priority));
 
     for (i, item) in items.into_iter().enumerate() {
         let text = if item.completed {
