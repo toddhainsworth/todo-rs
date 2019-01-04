@@ -2,6 +2,7 @@ extern crate serde;
 extern crate serde_json;
 extern crate dirs;
 extern crate colored;
+extern crate touch;
 
 #[macro_use]
 extern crate serde_derive;
@@ -12,6 +13,7 @@ use std::env;
 use std::io::Result;
 use std::process;
 use colored::*;
+use touch::exists;
 
 const TODO_FILENAME: &'static str = ".todos";
 
@@ -35,6 +37,24 @@ impl Default for TodoItem {
 }
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+    // Guard against having no todo file
+    if !exists(&get_todo_file_path()) && args.len() > 1 && args[1] != "init" {
+        eprintln!("Could not load todo file, run with `{} init` first", args[0]);
+        process::exit(1);
+    }
+
+    // Setup intiial requirements
+    if args.len() == 2 && args[1] == "init" {
+        match update_todo_file(&Vec::new()) {
+            Ok(_) => process::exit(0),
+            Err(e) => {
+                eprintln!("Could not create todo file: {}", e);
+                process::exit(1);
+            }
+        }
+    }
+
     let f = match get_todo_file() {
         Ok(text) => text,
         Err(e) => {
@@ -42,12 +62,10 @@ fn main() {
             process::exit(1);
         }
     };
-
     let mut items: Vec<TodoItem> = match serde_json::from_str(&f) {
         Ok(items) => items,
         Err(_) => Vec::new()
     };
-    let args: Vec<String> = env::args().collect();
 
     // Delete items
     if args.len() >= 3 && args[1] == "-d" {
@@ -154,5 +172,5 @@ Mark an existing item as complete
 - {0} -c <item-id> # get this by running '{0}' on it's own
 Delete an existing item from the list
 - {0} -d <item-id> # get this by running '{0}' on it's own
-    ", args[0]);
+", args[0]);
 }
