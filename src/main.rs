@@ -1,52 +1,32 @@
 extern crate serde;
 extern crate serde_json;
-extern crate dirs;
 extern crate colored;
 extern crate touch;
+extern crate dirs;
 
 #[macro_use]
 extern crate serde_derive;
 
-use std::path::Path;
-use std::fs;
 use std::env;
-use std::io::Result;
 use std::process;
 use colored::*;
 use touch::exists;
 
-const TODO_FILENAME: &'static str = ".todos";
+mod todo_item;
 
-#[derive(Serialize, Deserialize, Debug)]
-struct TodoItem {
-    text: String,
-    completed: bool,
-    priority: usize
-}
-
-impl TodoItem {
-    fn new(text: &str, completed: bool, priority: usize) -> Self {
-        TodoItem { text: String::from(text), completed, priority }
-    }
-}
-
-impl Default for TodoItem {
-    fn default() -> Self {
-        TodoItem::new("", false, 1)
-    }
-}
+use todo_item::TodoItem;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     // Guard against having no todo file
-    if !exists(&get_todo_file_path()) && args.len() > 1 && args[1] != "init" {
+    if !exists(&todo_item::get_todo_file_path()) && args.len() > 1 && args[1] != "init" {
         eprintln!("Could not load todo file, run with `{} init` first", args[0]);
         process::exit(1);
     }
 
     // Setup intiial requirements
     if args.len() == 2 && args[1] == "init" {
-        match update_todo_file(&Vec::new()) {
+        match todo_item::update_todo_file(&Vec::new()) {
             Ok(_) => process::exit(0),
             Err(e) => {
                 eprintln!("Could not create todo file: {}", e);
@@ -55,7 +35,7 @@ fn main() {
         }
     }
 
-    let f = match get_todo_file() {
+    let f = match todo_item::get_todo_file() {
         Ok(text) => text,
         Err(e) => {
             eprintln!("Could not read todo file: {}", e);
@@ -121,7 +101,7 @@ fn main() {
         }
     }
 
-    match update_todo_file(&items) {
+    match todo_item::update_todo_file(&items) {
         Err(e) => {
             eprintln!("Failed to update todo file: {}", e);
             process::exit(1);
@@ -141,21 +121,6 @@ fn main() {
 
         println!("{} - {}", i, text);
     }
-}
-
-fn get_todo_file() -> Result<String> {
-    fs::read_to_string(get_todo_file_path())
-}
-
-fn get_todo_file_path() -> String {
-    let home = dirs::home_dir().unwrap();
-    format!("{}/{}", home.display(), Path::new(TODO_FILENAME).display())
-}
-
-fn update_todo_file(items: &Vec<TodoItem>) -> Result<()> {
-    let path = get_todo_file_path();
-    let buf = serde_json::to_string(&items).unwrap();
-    fs::write(path, buf)
 }
 
 fn print_usage(args: &Vec<String>) {
