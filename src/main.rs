@@ -26,6 +26,10 @@ fn main() {
 
     // Setup intiial requirements
     if args.len() == 2 && args[1] == "init" {
+        if exists(&todo_item::get_todo_file_path()) {
+            process::exit(0);
+        }
+
         match todo_item::update_todo_file(&Vec::new()) {
             Ok(_) => process::exit(0),
             Err(e) => {
