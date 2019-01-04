@@ -17,3 +17,6 @@ $ todo -h
 ```
 
 Note; eventually i'll release standalone binaries for Linux and OSX (sorry Windows-folk)
+
+# Todo
+See [TODO.md](TODO.md)
