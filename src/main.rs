@@ -51,6 +51,9 @@ fn main() {
         Err(_) => Vec::new()
     };
 
+    // Sort items by priority 1 = highest, Infinity = lowest
+    items.sort_by(|a, b| a.priority.cmp(&b.priority));
+
     // Delete items
     if args.len() >= 3 && args[1] == "-d" {
         let item_id = &args[2];
@@ -112,9 +115,6 @@ fn main() {
         },
         _ => ()
     }
-
-    // Sort items by priority 1 = highest, Infinity = lowest
-    items.sort_by(|a, b| a.priority.cmp(&b.priority));
 
     for (i, item) in items.into_iter().enumerate() {
         let text = if item.completed {
