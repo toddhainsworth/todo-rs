@@ -86,6 +86,21 @@ fn main() {
                 process::exit(1);
             }
         };
+    // Edit existing item
+    } else if args.len() == 4 && args[1] == "-e" {
+        let item_id = &args[2];
+        match item_id.parse::<usize>() {
+            Ok(id) => {
+                match items.get_mut(id) {
+                    Some(item) => item.text = args[3].clone(),
+                    None => ()
+                };
+            },
+            Err(e) => {
+                eprintln!("Could not edit item: {}", e);
+                process::exit(1);
+            }
+        };
     // Print usage
     } else if args.len() == 3 && args[1] == "-h" {
         print_usage(&args);
