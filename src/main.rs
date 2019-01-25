@@ -77,7 +77,7 @@ fn main() {
         match item_id.parse::<usize>() {
             Ok(id) => {
                 match items.get_mut(id) {
-                    Some(item) => item.completed = !item.completed,
+                    Some(item) => item.toggle_complete(),
                     None => ()
                 };
             },

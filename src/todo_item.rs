@@ -17,6 +17,10 @@ impl TodoItem {
     pub fn new(text: &str, completed: bool, priority: usize) -> Self {
         TodoItem { text: String::from(text), completed, priority }
     }
+
+    pub fn toggle_complete(&mut self) {
+        self.completed = !self.completed;
+    }
 }
 
 impl Default for TodoItem {
