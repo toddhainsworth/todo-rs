@@ -101,6 +101,24 @@ fn main() {
                 process::exit(1);
             }
         };
+    // Change priority of item
+    } else if args.len() == 4 && args[1] == "-p" {
+        let item_id = &args[2];
+
+        match item_id.parse::<usize>() {
+            Ok(id) => {
+                if let Some(item) = items.get_mut(id) {
+                    match args[3].parse::<usize>() {
+                        Ok(p) => item.priority = p,
+                        Err(_) => ()
+                    };
+                }
+            },
+            Err(e) => {
+                eprintln!("Could not edit item: {}", e);
+                process::exit(1);
+            }
+        };
     // Print usage
     } else if args.len() == 3 && args[1] == "-h" {
         print_usage(&args);
@@ -150,11 +168,15 @@ Show current items
 - {0}
 Add a new item
 - {0} \"Do something cool\"
-- {0} \"Submit report for XYZ\" 1 # top priority
+- {0} \"Submit report for XYZ\" 0 # top priority
 - {0} \"Get milk on the way home\" 4 # lower priority
 Mark an existing item as complete
-- {0} -c <item-id> # get this by running '{0}' on it's own
+- {0} -c <item-id>
 Delete an existing item from the list
-- {0} -d <item-id> # get this by running '{0}' on it's own
+- {0} -d <item-id>
+Edit an existing item
+- {0} -e <item-id> \"Do some thing REALLY cool!\"
+Change the priority of an item
+- {0} -p <item-id> 42
 ", args[0]);
 }
