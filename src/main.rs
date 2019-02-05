@@ -1,26 +1,68 @@
+extern crate clap;
+extern crate colored;
+extern crate dirs;
 extern crate serde;
 extern crate serde_json;
-extern crate colored;
 extern crate touch;
-extern crate dirs;
 
 #[macro_use]
 extern crate serde_derive;
 
+use colored::*;
 use std::env;
 use std::process;
-use colored::*;
 use touch::exists;
+
+use clap::{App, Arg};
 
 mod todo_item;
 
 use todo_item::TodoItem;
 
 fn main() {
+    let matches = App::new("Todo")
+        .version("0.1.0") // TODO: Get this from the crate somehow
+        .author("Todd Hainsworth <hainsworth.todd@gmail.com>")
+        .about("Todo App in Rust")
+        .arg(Arg::with_name("init").help("Initialises the app"))
+        .arg(
+            Arg::with_name("delete")
+                .short("d")
+                .long("delete")
+                .help("delete an entry")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("edit")
+                .short("e")
+                .long("edit")
+                .help("edit an entry")
+                .value_delimiter("-"),
+        )
+        .arg(
+            Arg::with_name("priority")
+                .short("p")
+                .long("priority")
+                .help("change the priority of an entry")
+                .value_delimiter(" "),
+        )
+        .arg(
+            Arg::with_name("complete")
+                .short("c")
+                .long("complete")
+                .help("toggle completion of an entry")
+                .takes_value(true)
+                .value_delimiter(" "),
+        )
+        .get_matches();
+
     let args: Vec<String> = env::args().collect();
     // Guard against having no todo file
     if !exists(&todo_item::get_todo_file_path()) && args.len() > 1 && args[1] != "init" {
-        eprintln!("Could not load todo file, run with `{} init` first", args[0]);
+        eprintln!(
+            "Could not load todo file, run with `{} init` first",
+            args[0]
+        );
         process::exit(1);
     }
 
@@ -48,7 +90,7 @@ fn main() {
     };
     let mut items: Vec<TodoItem> = match serde_json::from_str(&f) {
         Ok(items) => items,
-        Err(_) => Vec::new()
+        Err(_) => Vec::new(),
     };
 
     // Sort items by priority 1 = highest, Infinity = lowest
@@ -78,9 +120,9 @@ fn main() {
             Ok(id) => {
                 match items.get_mut(id) {
                     Some(item) => item.toggle_complete(),
-                    None => ()
+                    None => (),
                 };
-            },
+            }
             Err(e) => {
                 eprintln!("Could not mark item as complete: {}", e);
                 process::exit(1);
@@ -93,9 +135,9 @@ fn main() {
             Ok(id) => {
                 match items.get_mut(id) {
                     Some(item) => item.text = args[3].clone(),
-                    None => ()
+                    None => (),
                 };
-            },
+            }
             Err(e) => {
                 eprintln!("Could not edit item: {}", e);
                 process::exit(1);
@@ -110,10 +152,10 @@ fn main() {
                 if let Some(item) = items.get_mut(id) {
                     match args[3].parse::<usize>() {
                         Ok(p) => item.priority = p,
-                        Err(_) => ()
+                        Err(_) => (),
                     };
                 }
-            },
+            }
             Err(e) => {
                 eprintln!("Could not edit item: {}", e);
                 process::exit(1);
@@ -145,8 +187,8 @@ fn main() {
         Err(e) => {
             eprintln!("Failed to update todo file: {}", e);
             process::exit(1);
-        },
-        _ => ()
+        }
+        _ => (),
     }
 
     for (i, item) in items.into_iter().enumerate() {
@@ -161,7 +203,8 @@ fn main() {
 }
 
 fn print_usage(args: &Vec<String>) {
-    println!("USAGE: {0} ...
+    println!(
+        "USAGE: {0} ...
 
 EXAMPLES:
 Show current items
@@ -178,5 +221,7 @@ Edit an existing item
 - {0} -e <item-id> \"Do some thing REALLY cool!\"
 Change the priority of an item
 - {0} -p <item-id> 42
-", args[0]);
+",
+        args[0]
+    );
 }
