@@ -197,15 +197,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2d2857ec59fadc0773853c664d2d18e7198e83883e7060b63c924cb077bd5c74"
 
 [[package]]
-name = "log"
-version = "0.4.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c84ec4b527950aa83a329754b01dbe3f58361d1c5efacd1f6d68c494d08a17c6"
-dependencies = [
- "cfg-if",
-]
-
-[[package]]
 name = "nodrop"
 version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -372,16 +363,6 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "touch",
-]
-
-[[package]]
-name = "touch"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0ff985ccaedc537018a1b6c7f377d25e16d08aa1fcc5f8f4fba984c7e69cf09"
-dependencies = [
- "log",
 ]
 
 [[package]]
