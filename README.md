@@ -1,5 +1,7 @@
 # Todo
 
+[![Rust](https://github.com/toddhainsworth/todo-rs/actions/workflows/rust.yml/badge.svg)](https://github.com/toddhainsworth/todo-rs/actions/workflows/rust.yml)
+
 A mini Todo utility in Rust
 
 # Aims
