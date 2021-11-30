@@ -1,6 +1,6 @@
 [package]
 name = "todo"
-version = "0.2.2"
+version = "0.3.0"
 authors = ["Todd Hainsworth <hainsworth.todd@gmail.com>"]
 
 [dependencies]
@@ -10,3 +10,4 @@ serde_derive = "1.0"
 dirs = "4.0"
 colored = "2.0"
 clap = "2.32.0"
+home = "0.5.3"
