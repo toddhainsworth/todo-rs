@@ -1,9 +1,8 @@
+use home::home_dir;
 use serde_json;
 use std::fs;
 use std::io::Result;
-use home::home_dir;
-
-const TODO_FILENAME: &'static str = ".todos";
+use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Item {
@@ -30,13 +29,22 @@ impl Default for Item {
 
 pub struct ItemRepository {
     items: Vec<Item>,
+    file_path: Option<PathBuf>,
 }
 
 impl ItemRepository {
-    pub fn new() -> Result<Self> {
-        let item_json = ItemRepository::load_items()?;
-        let items: Vec<Item> = serde_json::from_str(&item_json)?;
-        Ok(Self { items })
+    pub fn new(path: Option<&str>) -> Result<Self> {
+        let mut repo = Self {
+            items: Vec::new(),
+            file_path: None,
+        };
+
+        if let Some(path) = path {
+            repo.file_path = Some(PathBuf::from(path));
+            repo.load_items()?;
+        }
+
+        Ok(repo)
     }
 
     pub fn delete(&mut self, id: usize) {
@@ -44,9 +52,13 @@ impl ItemRepository {
     }
 
     pub fn publish(self) -> Result<()> {
-        let path = Self::get_todo_file_path();
-        let buf = serde_json::to_string(&self.items).unwrap();
-        fs::write(path, buf)
+        if self.file_path.is_some() {
+            let buf = serde_json::to_string(&self.items)?;
+            let path = self.get_todo_file_path();
+            return fs::write(path, buf)
+        }
+
+        Ok(())
     }
 
     pub fn toggle(&mut self, id: usize) {
@@ -72,13 +84,28 @@ impl ItemRepository {
         self.items.as_mut()
     }
 
-    fn load_items() -> Result<String> {
-        fs::read_to_string(Self::get_todo_file_path())
+    fn load_items(&mut self) -> Result<()> {
+        let item_json = fs::read_to_string(self.get_todo_file_path())?;
+        self.items = serde_json::from_str(&item_json)?;
+        Ok(())
     }
 
-    fn get_todo_file_path() -> String {
+    fn get_todo_file_path(&self) -> String {
         // unwrapping because if this were to fail then there's something _really_ wrong with the users setup...
         let home = home_dir().unwrap();
-       format!("{}/{}", home.display(), TODO_FILENAME)
+        // unwrapping because we only call this if we already know we have a filepath
+        let path = self.file_path.as_ref().unwrap().display();
+        format!("{}/{}", home.display(), path)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_is_instantiatable() {
+        let repository = ItemRepository::new(None);
+        assert!(repository.is_ok())
     }
 }

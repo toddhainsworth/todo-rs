@@ -1,9 +1,9 @@
 extern crate clap;
 extern crate colored;
 extern crate dirs;
+extern crate home;
 extern crate serde;
 extern crate serde_json;
-extern crate home;
 
 #[macro_use]
 extern crate serde_derive;
@@ -14,8 +14,9 @@ use std::process;
 use clap::{App, Arg};
 
 mod item;
-
 use item::ItemRepository;
+
+const TODO_FILENAME: &'static str = ".todos";
 
 fn main() {
     let matches = App::new("Todo")
@@ -47,7 +48,7 @@ fn main() {
         )
         .get_matches();
 
-    let mut repository = match ItemRepository::new() {
+    let mut repository = match ItemRepository::new(Some(TODO_FILENAME)) {
         Ok(r) => r,
         Err(e) => {
             eprintln!("Failed to load items: {}", e);
